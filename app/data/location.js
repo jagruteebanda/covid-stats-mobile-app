@@ -1,0 +1,43 @@
+const location = {
+  geonames: [
+    {
+      distance: '1.1379',
+      timezone: {
+        gmtOffset: 1,
+        timeZoneId: 'Europe/Zurich',
+        dstOffset: 2,
+      },
+      asciiName: 'Chruezegg',
+      astergdem: 1250,
+      countryId: '2658434',
+      fcl: 'P',
+      srtm3: 1254,
+      adminId2: '7285001',
+      adminId3: '7286562',
+      countryCode: 'CH',
+      adminCodes1: {ISO3166_2: 'SG'},
+      adminId1: '2658821',
+      lat: '47.2985',
+      fcode: 'PPLX',
+      continentCode: 'EU',
+      adminCode2: '1727',
+      adminCode3: '3394',
+      adminCode1: 'SG',
+      lng: '9.01488',
+      geonameId: 7910950,
+      toponymName: 'Chrüzegg',
+      population: 0,
+      adminName5: '',
+      adminName4: '',
+      adminName3: 'Mosnang',
+      adminName2: 'Wahlkreis Toggenburg',
+      name: 'Chrüzegg',
+      fclName: 'city, village,...',
+      countryName: 'Switzerland',
+      fcodeName: 'section of populated place',
+      adminName1: 'Saint Gallen',
+    },
+  ],
+};
+
+export default location;
