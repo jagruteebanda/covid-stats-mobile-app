@@ -160,32 +160,6 @@ export default class Home extends Component {
         : a[filterData.column] <= parseInt(filterData.number);
       return b;
     });
-    console.log(filteredData.length);
-    // if (filterData.column === 'TotalConfirmed') {
-    //   filterData.comparator === '>='
-    //     ? (filteredData = filteredData.filter(
-    //         (a) => a.TotalConfirmed >= parseInt(filterData.number),
-    //       ))
-    //     : (filteredData = filteredData.filter(
-    //         (a) => a.TotalConfirmed <= parseInt(filterData.number),
-    //       ));
-    // } else if (filterData.column === 'TotalRecovered') {
-    //   filterData.comparator === '>='
-    //     ? (filteredData = filteredData.filter(
-    //         (a) => a.TotalRecovered >= parseInt(filterData.number),
-    //       ))
-    //     : (filteredData = filteredData.filter(
-    //         (a) => a.TotalRecovered <= parseInt(filterData.number),
-    //       ));
-    // } else {
-    //   filterData.comparator === '>='
-    //     ? (filteredData = filteredData.filter(
-    //         (a) => a.TotalDeaths >= parseInt(filterData.number),
-    //       ))
-    //     : (filteredData = filteredData.filter(
-    //         (a) => a.TotalDeaths <= parseInt(filterData.number),
-    //       ));
-    // }
     countryStatData = userLocationData.concat(filteredData);
     this.setState({filterPopupOpen: false, countryStatData});
   }
