@@ -18,11 +18,12 @@ const CountryStats = (props) => {
         width: width - 14,
         height,
         alignItems: 'center',
-        marginTop: 4,
+        // marginTop: 4,
         borderColor: '#e6e6e6',
         borderWidth: 1,
-        borderRadius: 10,
+        // borderRadius: 4,
         elevation: 2,
+        marginBottom: 4
       }}>
       <View
         style={{
@@ -31,8 +32,8 @@ const CountryStats = (props) => {
           height: 50,
           alignItems: 'center',
           backgroundColor: '#ffffff',
-          borderTopLeftRadius: 10,
-          borderTopRightRadius: 10,
+          // borderTopLeftRadius: 4,
+          // borderTopRightRadius: 4,
           borderBottomColor: '#e6e6e6',
           borderBottomWidth: 1,
           // elevation: 2
