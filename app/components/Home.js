@@ -12,6 +12,7 @@ import Geolocation from 'react-native-geolocation-service';
 import AppBar from './AppBar';
 import GlobalStats from './GlobalStats';
 import FilterSection from './FilterSection';
+import FilterModal from './FilterModal';
 import CountryStats from './CountryStats';
 
 const {width, height} = Dimensions.get('window');
@@ -27,6 +28,7 @@ export default class Home extends Component {
     super(props);
     this.state = {
       stats: [],
+      totalStatData: [],
       globalStatData: {},
       countryStatData: [],
       userLocation: '',
@@ -39,6 +41,12 @@ export default class Home extends Component {
         recoveredSortType: null,
         deaths: false,
         deathsSortType: null,
+        filterPopupOpen: false,
+      },
+      filterData: {
+        column: '',
+        comparator: '',
+        number: 0,
       },
     };
   }
@@ -54,7 +62,11 @@ export default class Home extends Component {
     countryStatData.sort((a, b) => b.TotalConfirmed - a.TotalConfirmed);
     // Remove zero cases countries
     countryStatData = countryStatData.filter((a) => a.TotalConfirmed !== 0);
-    this.setState({countryStatData, globalStatData});
+    this.setState({
+      countryStatData,
+      globalStatData,
+      totalStatData: countryStatData,
+    });
   };
 
   getUserLocation = async () => {
@@ -69,7 +81,11 @@ export default class Home extends Component {
         (a) => a.Country.toLowerCase() === userLocation.toLowerCase(),
       );
       filteredData.unshift(userLocationData[0]);
-      this.setState({userLocation, countryStatData: filteredData});
+      this.setState({
+        userLocation,
+        countryStatData: filteredData,
+        totalStatData: filteredData,
+      });
     } else {
       try {
         const granted = await PermissionsAndroid.request(
@@ -110,7 +126,11 @@ export default class Home extends Component {
                     (a) => a.Country.toLowerCase() === userLocation,
                   );
                   filteredData = filteredData.unshift(userLocationData);
-                  this.setState({userLocation, countryStatData: filteredData});
+                  this.setState({
+                    userLocation,
+                    countryStatData: filteredData,
+                    totalStatData: countryStatData,
+                  });
                 }
               });
             },
@@ -121,13 +141,92 @@ export default class Home extends Component {
             {enableHighAccuracy: false, timeout: 15000, maximumAge: 10000},
           );
         } else {
-          console.log('Camera permission denied');
+          console.log('Location permission denied');
         }
       } catch (err) {
         console.warn(err);
       }
     }
   };
+
+  handleFilterSort(filterData) {
+    let {totalStatData, countryStatData} = this.state;
+    countryStatData = totalStatData;
+    let userLocationData = countryStatData.slice(0, 1);
+    let filteredData = countryStatData.slice(1, countryStatData.length);
+    filteredData = filteredData.filter((a) => {
+      let b = filterData.comparator === '>='
+        ? a[filterData.column] >= parseInt(filterData.number)
+        : a[filterData.column] <= parseInt(filterData.number);
+      return b;
+    });
+    console.log(filteredData.length);
+    // if (filterData.column === 'TotalConfirmed') {
+    //   filterData.comparator === '>='
+    //     ? (filteredData = filteredData.filter(
+    //         (a) => a.TotalConfirmed >= parseInt(filterData.number),
+    //       ))
+    //     : (filteredData = filteredData.filter(
+    //         (a) => a.TotalConfirmed <= parseInt(filterData.number),
+    //       ));
+    // } else if (filterData.column === 'TotalRecovered') {
+    //   filterData.comparator === '>='
+    //     ? (filteredData = filteredData.filter(
+    //         (a) => a.TotalRecovered >= parseInt(filterData.number),
+    //       ))
+    //     : (filteredData = filteredData.filter(
+    //         (a) => a.TotalRecovered <= parseInt(filterData.number),
+    //       ));
+    // } else {
+    //   filterData.comparator === '>='
+    //     ? (filteredData = filteredData.filter(
+    //         (a) => a.TotalDeaths >= parseInt(filterData.number),
+    //       ))
+    //     : (filteredData = filteredData.filter(
+    //         (a) => a.TotalDeaths <= parseInt(filterData.number),
+    //       ));
+    // }
+    countryStatData = userLocationData.concat(filteredData);
+    this.setState({filterPopupOpen: false, countryStatData});
+  }
+
+  handleFilterPopup() {
+    this.setState({filterPopupOpen: true});
+  }
+
+  closeFilterPopup() {
+    this.setState({filterPopupOpen: false});
+  }
+
+  onChangeFilterColumn(column) {
+    let {filterData} = this.state;
+    this.setState({
+      filterData: {
+        ...filterData,
+        column,
+      },
+    });
+  }
+
+  onChangeFilterComparator(comparator) {
+    let {filterData} = this.state;
+    this.setState({
+      filterData: {
+        ...filterData,
+        comparator,
+      },
+    });
+  }
+
+  onChangeFilterNumber(number) {
+    let {filterData} = this.state;
+    this.setState({
+      filterData: {
+        ...filterData,
+        number,
+      },
+    });
+  }
 
   handleCountryStatSorting(sortData) {
     // console.log(sortData);
@@ -185,10 +284,23 @@ export default class Home extends Component {
   }
 
   render() {
-    const {globalStatData, countryStatData, sortData} = this.state;
+    const {
+      globalStatData,
+      countryStatData,
+      sortData,
+      filterPopupOpen,
+      filterData,
+    } = this.state;
     return (
-      <View style={{flex: 1, width, height}}>
-        <AppBar />
+      <View
+        style={{
+          flex: 1,
+          width,
+          height,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <AppBar handleFilterPopup={() => this.handleFilterPopup()} />
         <View
           style={{
             flex: 1,
@@ -199,7 +311,7 @@ export default class Home extends Component {
             backgroundColor: '#f4f4f4',
           }}>
           <GlobalStats globalStatData={globalStatData} />
-          <FilterSection />
+          {/* <FilterSection /> */}
           <CountryStats
             sortData={sortData}
             countryStatData={countryStatData}
@@ -208,6 +320,19 @@ export default class Home extends Component {
             }
           />
         </View>
+        {filterPopupOpen && (
+          <FilterModal
+            filterPopupOpen={filterPopupOpen}
+            filterData={filterData}
+            onChangeFilterColumn={(column) => this.onChangeFilterColumn(column)}
+            onChangeFilterComparator={(comparator) =>
+              this.onChangeFilterComparator(comparator)
+            }
+            onChangeFilterNumber={(number) => this.onChangeFilterNumber(number)}
+            closeFilterPopup={() => this.closeFilterPopup()}
+            handleFilterSort={(filterData) => this.handleFilterSort(filterData)}
+          />
+        )}
       </View>
     );
   }
