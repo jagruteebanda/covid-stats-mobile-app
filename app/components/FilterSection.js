@@ -1,5 +1,6 @@
 import React from 'react';
-import {View, Text, Dimensions} from 'react-native';
+import {View, Text, Dimensions, Picker} from 'react-native';
+// import {Picker} from '@react-native-community/picker';
 
 const {width, height} = Dimensions.get('window');
 
@@ -8,16 +9,26 @@ const FilterSection = (props) => {
     <View
       style={{
         flexDirection: 'row',
-        backgroundColor: '#e6e6e6',
-        width: width - 16,
+        backgroundColor: '#ffffff',
+        width: width - 14,
         height: 50,
+        marginTop: 4,
+        borderWidth: 1,
+        borderColor: '#e6e6e6',
+        elevation: 2,
+        alignItems: 'center',
+        justifyContent: 'center'
       }}>
-      <View style={{width: (2 * width) / 3, backgroundColor: '#fff'}}>
-        <Text>CUrrent Filter</Text>
-      </View>
-      <View style={{width: width / 3}}>
-        <Text>Filter</Text>
-      </View>
+      {/* <View style={{width: width - 16, backgroundColor: '#fff', alignItems: 'center'}}> */}
+        <View style={{width: (width - 16) / 6}}>
+          <Text style={{ textAlign: 'center' }}>Filter</Text>
+        </View>
+        <View style={{width: 2 * (width - 16) / 6}}>
+          <Picker></Picker>
+        </View>
+        <View style={{width: (width - 16) / 6}}></View>
+        <View style={{width: 2 * (width - 16) / 6}}></View>
+      {/* </View> */}
     </View>
   );
 };
