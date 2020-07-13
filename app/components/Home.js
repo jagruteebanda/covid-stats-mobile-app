@@ -30,6 +30,16 @@ export default class Home extends Component {
       globalStatData: {},
       countryStatData: [],
       userLocation: '',
+      sortData: {
+        country: false,
+        countrySortType: null,
+        confirmed: true,
+        confirmedSortType: 'desc',
+        recovered: false,
+        recoveredSortType: null,
+        deaths: false,
+        deathsSortType: null,
+      },
     };
   }
 
@@ -93,14 +103,12 @@ export default class Home extends Component {
                     res.geonames[0].countryName,
                   );
                   userLocation = res.geonames[0].countryName;
-                  console.log('userLocation', userLocation);
                   let filteredData = this.state.countryStatData.filter(
                     (a) => a.Country.toLowerCase() !== userLocation,
                   );
                   let userLocationData = this.state.countryStatData.filter(
                     (a) => a.Country.toLowerCase() === userLocation,
                   );
-                  console.log(userLocationData);
                   filteredData = filteredData.unshift(userLocationData);
                   this.setState({userLocation, countryStatData: filteredData});
                 }
@@ -121,8 +129,63 @@ export default class Home extends Component {
     }
   };
 
+  handleCountryStatSorting(sortData) {
+    // console.log(sortData);
+    let {countryStatData} = this.state;
+    let userLocationData = countryStatData.slice(0, 1);
+    let remainingData = countryStatData.slice(1, countryStatData.length);
+    if (sortData.country) {
+      if (sortData.countrySortType === 'asc') {
+        // Sort in ascending order
+        sortData.countrySortType = 'asc';
+        remainingData.sort((a, b) => a.Country.localeCompare(b.Country));
+      } else if (sortData.countrySortType === 'desc') {
+        // Sort in descending order
+        sortData.countrySortType = 'desc';
+        remainingData.sort((a, b) => b.Country.localeCompare(a.Country));
+      } else {
+        // Sort by TotalConfirmed cases - original case
+        sortData.countrySortType = null;
+        remainingData.sort((a, b) => b.TotalConfirmed - a.TotalConfirmed);
+      }
+    } else if (sortData.recovered) {
+      if (sortData.recoveredSortType === 'asc') {
+        // Sort in ascending order
+        sortData.recoveredSortType = 'asc';
+        remainingData.sort((a, b) => a.TotalRecovered - b.TotalRecovered);
+      } else {
+        // Sort in descending order
+        sortData.recoveredSortType = 'desc';
+        remainingData.sort((a, b) => b.TotalRecovered - a.TotalRecovered);
+      }
+    } else if (sortData.deaths) {
+      if (sortData.deathsSortType === 'asc') {
+        // Sort in ascending order
+        sortData.deathsSortType = 'asc';
+        remainingData.sort((a, b) => a.TotalDeaths - b.TotalDeaths);
+      } else {
+        // Sort in descending order
+        sortData.deathsSortType = 'desc';
+        remainingData.sort((a, b) => b.TotalDeaths - a.TotalDeaths);
+      }
+    } else {
+      // default case: cofirmed based sort
+      if (sortData.confirmedSortType === 'asc') {
+        // Sort in ascending order
+        sortData.confirmedSortType = 'asc';
+        remainingData.sort((a, b) => a.TotalConfirmed - b.TotalConfirmed);
+      } else {
+        // Sort in descending order
+        sortData.confirmedSortType = 'desc';
+        remainingData.sort((a, b) => b.TotalConfirmed - a.TotalConfirmed);
+      }
+    }
+    countryStatData = userLocationData.concat(remainingData);
+    this.setState({sortData, countryStatData});
+  }
+
   render() {
-    const {globalStatData, countryStatData, userLocation} = this.state;
+    const {globalStatData, countryStatData, sortData} = this.state;
     return (
       <View style={{flex: 1, width, height}}>
         <AppBar />
@@ -133,13 +196,16 @@ export default class Home extends Component {
             width,
             height: height - 50,
             alignItems: 'center',
-            backgroundColor: '#f4f4f4'
+            backgroundColor: '#f4f4f4',
           }}>
           <GlobalStats globalStatData={globalStatData} />
           <FilterSection />
           <CountryStats
+            sortData={sortData}
             countryStatData={countryStatData}
-            userLocation={userLocation}
+            handleCountryStatSorting={(sortData) =>
+              this.handleCountryStatSorting(sortData)
+            }
           />
         </View>
       </View>
