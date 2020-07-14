@@ -46,7 +46,7 @@ export default class Home extends Component {
       filterData: {
         column: '',
         comparator: '',
-        number: 0,
+        number: '',
       },
     };
   }
@@ -149,15 +149,28 @@ export default class Home extends Component {
     }
   };
 
+  resetFilter() {
+    this.setState({
+      countryStatData: this.state.totalStatData,
+      filterData: {
+        column: '',
+        comparator: '',
+        number: 0,
+      },
+      filterPopupOpen: false
+    });
+  }
+
   handleFilterSort(filterData) {
     let {totalStatData, countryStatData} = this.state;
     countryStatData = totalStatData;
     let userLocationData = countryStatData.slice(0, 1);
     let filteredData = countryStatData.slice(1, countryStatData.length);
     filteredData = filteredData.filter((a) => {
-      let b = filterData.comparator === '>='
-        ? a[filterData.column] >= parseInt(filterData.number)
-        : a[filterData.column] <= parseInt(filterData.number);
+      let b =
+        filterData.comparator === '>='
+          ? a[filterData.column] >= parseInt(filterData.number)
+          : a[filterData.column] <= parseInt(filterData.number);
       return b;
     });
     countryStatData = userLocationData.concat(filteredData);
@@ -273,8 +286,9 @@ export default class Home extends Component {
           height,
           alignItems: 'center',
           justifyContent: 'center',
+          backgroundColor: '#1a1a1a',
         }}>
-        <AppBar handleFilterPopup={() => this.handleFilterPopup()} />
+        <AppBar />
         <View
           style={{
             flex: 1,
@@ -282,10 +296,14 @@ export default class Home extends Component {
             width,
             height: height - 50,
             alignItems: 'center',
-            backgroundColor: '#f4f4f4',
+            backgroundColor: '#1a1a1a',
           }}>
           <GlobalStats globalStatData={globalStatData} />
-          {/* <FilterSection /> */}
+          <FilterSection
+            filterData={filterData}
+            resetFilter={() => this.resetFilter()}
+            handleFilterPopup={() => this.handleFilterPopup()}
+          />
           <CountryStats
             sortData={sortData}
             countryStatData={countryStatData}
@@ -304,6 +322,7 @@ export default class Home extends Component {
             }
             onChangeFilterNumber={(number) => this.onChangeFilterNumber(number)}
             closeFilterPopup={() => this.closeFilterPopup()}
+            resetFilter={() => this.resetFilter()}
             handleFilterSort={(filterData) => this.handleFilterSort(filterData)}
           />
         )}
