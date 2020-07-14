@@ -1,7 +1,16 @@
 import React from 'react';
-import {View, FlatList, Dimensions, Text, TouchableOpacity} from 'react-native';
+import {
+  View,
+  FlatList,
+  Dimensions,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 import {SafeAreaView} from 'react-navigation';
 import CountryStatItem from './CountryStatItem';
+import Icon from 'react-native-vector-icons/FontAwesome5';
+
 const {width, height} = Dimensions.get('window');
 
 const CountryStats = (props) => {
@@ -12,32 +21,8 @@ const CountryStats = (props) => {
   } = props;
 
   return (
-    <SafeAreaView
-      style={{
-        flex: 1,
-        width: width - 14,
-        height,
-        alignItems: 'center',
-        // marginTop: 4,
-        borderColor: '#e6e6e6',
-        borderWidth: 1,
-        // borderRadius: 4,
-        elevation: 2,
-        marginBottom: 4
-      }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          width: width - 16,
-          height: 50,
-          alignItems: 'center',
-          backgroundColor: '#ffffff',
-          // borderTopLeftRadius: 4,
-          // borderTopRightRadius: 4,
-          borderBottomColor: '#e6e6e6',
-          borderBottomWidth: 1,
-          // elevation: 2
-        }}>
+    <SafeAreaView style={styles.safeAreaView}>
+      <View style={styles.tableHeadingView}>
         <TouchableOpacity
           onPress={() =>
             handleCountryStatSorting({
@@ -50,19 +35,21 @@ const CountryStats = (props) => {
                   ? 'desc'
                   : null,
               confirmed: false,
+              confirmedSortType: null,
               recovered: false,
+              recoveredSortType: null,
               deaths: false,
+              deathsSortType: null,
             })
           }>
-          <View
-            style={{
-              justifyContent: 'center',
-              width: (width - 16) / 4,
-              height: 50,
-            }}>
-            <Text style={{textAlign: 'center', fontWeight: '500'}}>
-              {'Country'}
-            </Text>
+          <View style={styles.tableHeadingCell}>
+            <Text style={styles.tableHeadingText}>{'Country'}</Text>
+            {sortData.countrySortType ===
+            null ? null : sortData.countrySortType === 'asc' ? (
+              <Icon name={'sort-up'} size={10} color={'#00cc99'} />
+            ) : (
+              <Icon name={'sort-down'} size={10} color={'#00cc99'} />
+            )}
           </View>
         </TouchableOpacity>
         <TouchableOpacity
@@ -71,51 +58,59 @@ const CountryStats = (props) => {
               ...sortData,
               confirmed: true,
               confirmedSortType:
-                sortData.confirmedSortType === null ||
-                sortData.confirmedSortType === 'desc'
+                sortData.confirmedSortType === null
+                  ? null
+                  : sortData.confirmedSortType === 'desc'
                   ? 'asc'
                   : 'desc',
               country: false,
+              countrySortType: null,
               recovered: false,
+              recoveredSortType: null,
               deaths: false,
+              deathsSortType: null,
             })
           }>
-          <View
-            style={{
-              justifyContent: 'center',
-              width: (width - 16) / 4,
-              height: 50,
-            }}>
-            <Text style={{textAlign: 'center'}}>{'Confirmed'}</Text>
+          <View style={styles.tableHeadingCell}>
+            <Text style={styles.tableHeadingText}>{'Confirmed'}</Text>
+            {sortData.confirmedSortType ===
+            null ? null : sortData.confirmedSortType === 'desc' ? (
+              <Icon name={'sort-down'} size={10} color={'#00cc99'} />
+            ) : (
+              <Icon name={'sort-up'} size={10} color={'#00cc99'} />
+            )}
           </View>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() =>
             handleCountryStatSorting({
-              ...sortData,
               recovered: true,
-              recoveredSortType: sortData.recoveredSortType === null ||
-              sortData.recoveredSortType === 'desc'
-                ? 'asc'
-                : 'desc',
+              recoveredSortType:
+                sortData.recoveredSortType === null ||
+                sortData.recoveredSortType === 'desc'
+                  ? 'asc'
+                  : 'desc',
               country: false,
+              countrySortType: null,
               confirmed: false,
+              confirmedSortType: null,
               deaths: false,
+              deathsSortType: null,
             })
           }>
-          <View
-            style={{
-              justifyContent: 'center',
-              width: (width - 16) / 4,
-              height: 50,
-            }}>
-            <Text style={{textAlign: 'center'}}>{'Recovered'}</Text>
+          <View style={styles.tableHeadingCell}>
+            <Text style={styles.tableHeadingText}>{'Recovered'}</Text>
+            {sortData.recoveredSortType ===
+            null ? null : sortData.recoveredSortType === 'desc' ? (
+              <Icon name={'sort-down'} size={10} color={'#00cc99'} />
+            ) : (
+              <Icon name={'sort-up'} size={10} color={'#00cc99'} />
+            )}
           </View>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={() =>
             handleCountryStatSorting({
-              ...sortData,
               deaths: true,
               deathsSortType:
                 sortData.deathsSortType === null ||
@@ -123,22 +118,26 @@ const CountryStats = (props) => {
                   ? 'asc'
                   : 'desc',
               country: false,
+              countrySortType: null,
               confirmed: false,
+              confirmedSortType: null,
               recovered: false,
+              recoveredSortType: null,
             })
           }>
-          <View
-            style={{
-              justifyContent: 'center',
-              width: (width - 16) / 4,
-              height: 40,
-            }}>
-            <Text style={{textAlign: 'center'}}>{'Deaths'}</Text>
+          <View style={styles.tableHeadingCell}>
+            <Text style={styles.tableHeadingText}>{'Deaths'}</Text>
+            {sortData.deathsSortType ===
+            null ? null : sortData.deathsSortType === 'desc' ? (
+              <Icon name={'sort-down'} size={10} color={'#00cc99'} />
+            ) : (
+              <Icon name={'sort-up'} size={10} color={'#00cc99'} />
+            )}
           </View>
         </TouchableOpacity>
       </View>
       <FlatList
-        style={{flex: 1, width: width - 16, height}}
+        style={{flex: 1, width: width - 24, height}}
         data={countryStatData}
         renderItem={({item, index}) => (
           <CountryStatItem item={item} index={index} />
@@ -148,5 +147,48 @@ const CountryStats = (props) => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  safeAreaView: {
+    flex: 1,
+    width: width - 14,
+    height,
+    alignItems: 'center',
+    // marginTop: 4,
+    // borderColor: '#e6e6e6',
+    borderWidth: 1,
+    borderRadius: 4,
+    // elevation: 2,
+    marginBottom: 4,
+    padding: 4,
+    backgroundColor: '#262626',
+  },
+  tableHeadingView: {
+    flexDirection: 'row',
+    width: width - 24,
+    height: 50,
+    alignItems: 'center',
+    backgroundColor: '#262626',
+    borderTopLeftRadius: 4,
+    borderTopRightRadius: 4,
+    borderBottomColor: '#33ccff',
+    borderBottomWidth: 1,
+    // elevation: 2
+  },
+  tableHeadingCell: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: (width - 16) / 4,
+    height: 50,
+  },
+  tableHeadingText: {
+    fontFamily: 'SourceSansPro-SemiBold',
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#00ccff',
+    marginRight: 4,
+  },
+});
 
 export default CountryStats;
