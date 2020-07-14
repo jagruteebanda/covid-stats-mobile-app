@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from 'react-native';
 // import { TouchableOpacity } from 'react-native-gesture-handler';
-import Icon from 'react-native-vector-icons/FontAwesome5Pro';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 
 const {width} = Dimensions.get('window');
 
@@ -17,6 +17,7 @@ const AppBar = (props) => {
       {/* <View style={{padding: 18, marginLeft: 8}}>
         <Text style={{fontSize: 16, opacity: 0}}>{'<'}</Text>
       </View> */}
+      <Icon name={'chart-line'} size={20} color={'#fff'} />
       <Text
         style={styles.appName}>
         {'COVID-19 Stats'}
@@ -47,6 +48,7 @@ const styles = StyleSheet.create({
     fontFamily: 'SourceSansPro-SemiBold',
     fontSize: 20,
     color: '#ffffff',
+    marginLeft: 8
   }
 });
 
