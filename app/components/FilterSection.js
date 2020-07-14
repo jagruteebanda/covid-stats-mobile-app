@@ -1,36 +1,88 @@
 import React from 'react';
-import {View, Text, Dimensions, Picker} from 'react-native';
+import {
+  View,
+  Text,
+  Dimensions,
+  Picker,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 // import {Picker} from '@react-native-community/picker';
+import Icon from 'react-native-vector-icons/FontAwesome5';
 
 const {width, height} = Dimensions.get('window');
 
-const FilterSection = (props) => {
+const FilterSection = ({
+  filterData,
+  resetFilter = (f) => f,
+  handleFilterPopup = (f) => f,
+}) => {
+  const filterText =
+    filterData.column.length > 0
+      ? `${filterData.column} ${filterData.comparator} ${filterData.number}`
+      : 'No filters selected';
   return (
-    <View
-      style={{
-        flexDirection: 'row',
-        backgroundColor: '#ffffff',
-        width: width - 14,
-        height: 50,
-        marginTop: 4,
-        borderWidth: 1,
-        borderColor: '#e6e6e6',
-        elevation: 2,
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-      {/* <View style={{width: width - 16, backgroundColor: '#fff', alignItems: 'center'}}> */}
-        <View style={{width: (width - 16) / 6}}>
-          <Text style={{ textAlign: 'center' }}>Filter</Text>
+    <View style={styles.filterSectionView}>
+      <View style={styles.filterDataView}>
+        <View style={[styles.filterTextView, {width: filterText.length * 8}]}>
+          <Text style={styles.filterTextDataView}>{filterText}</Text>
+          {filterData.column.length > 0 && (
+            <TouchableOpacity onPress={() => resetFilter()}>
+              <View style={{marginLeft: 4}}>
+                <Icon name={'times-circle'} size={14} color={'#fff'} />
+              </View>
+            </TouchableOpacity>
+          )}
         </View>
-        <View style={{width: 2 * (width - 16) / 6}}>
-          <Picker></Picker>
+      </View>
+      <TouchableOpacity onPress={() => handleFilterPopup()}>
+        <View style={{width: 36}}>
+          <Icon name="sliders-h" size={20} color="#33ccff" />
         </View>
-        <View style={{width: (width - 16) / 6}}></View>
-        <View style={{width: 2 * (width - 16) / 6}}></View>
-      {/* </View> */}
+      </TouchableOpacity>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  filterSectionView: {
+    flexDirection: 'row',
+    backgroundColor: '#262626',
+    width: width - 14,
+    height: 50,
+    // marginTop: 4,
+    borderWidth: 1,
+    borderBottomColor: '#33ccff',
+    // borderRadius: 4,
+    // elevation: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterDataView: {
+    flexDirection: 'row',
+    width: width - 52,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterTextView: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(153, 255, 204, 0.2)',
+    // height: 30,
+    paddingTop: 4,
+    paddingBottom: 4,
+    paddingRight: 4,
+    borderColor: '#99ffcc',
+    borderWidth: 1,
+    borderRadius: 25,
+  },
+  filterTextDataView: {
+    fontFamily: 'SourceSansPro-Regular',
+    color: '#fff',
+    textAlign: 'center',
+    // marginRight: 4,
+  },
+});
 
 export default FilterSection;
