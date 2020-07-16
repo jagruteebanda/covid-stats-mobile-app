@@ -5,29 +5,57 @@ import Icon from 'react-native-vector-icons/FontAwesome5';
 const {width} = Dimensions.get('window');
 
 const GlobalStats = (props) => {
-  const {globalStatData} = props;
+  const {globalStatData, localStatData} = props;
   return (
-    <View style={styles.globalStatView}>
+    <View style={[styles.globalStatView, {marginTop: globalStatData ? 4 : 0}]}>
       <View style={styles.globalStatHeadingView}>
-        <Icon name={'globe-americas'} size={18} color={'#33ccff'} />
-        <Text style={styles.globalStatHeading}>{'Global Stats'}</Text>
+        <Icon
+          name={
+            globalStatData
+              ? 'globe-americas'
+              : localStatData
+              ? 'font-awesome-flag'
+              : null
+          }
+          size={18}
+          color={'#33ccff'}
+        />
+        <Text style={styles.globalStatHeading}>
+          {globalStatData
+            ? 'Global Stats'
+            : localStatData
+            ? `Country Stat: ${localStatData.Country}`
+            : null}
+        </Text>
       </View>
       <View style={styles.globalCasesView}>
         <View style={styles.caseView}>
           <Text style={[styles.globalStatCases, {color: '#ff3300'}]}>
-            {globalStatData['TotalConfirmed']}
+            {globalStatData
+              ? globalStatData.TotalConfirmed
+              : localStatData
+              ? localStatData.TotalConfirmed
+              : null}
           </Text>
           <Text style={styles.globalStatSubHeading}>{'Confirmed'}</Text>
         </View>
         <View style={styles.caseView}>
           <Text style={[styles.globalStatCases, {color: '#00cc00'}]}>
-            {globalStatData['TotalRecovered']}
+            {globalStatData
+              ? globalStatData.TotalRecovered
+              : localStatData
+              ? localStatData.TotalRecovered
+              : null}
           </Text>
           <Text style={styles.globalStatSubHeading}>{'Recovered'}</Text>
         </View>
         <View style={styles.caseView}>
           <Text style={[styles.globalStatCases, {color: '#979797'}]}>
-            {globalStatData['TotalDeaths']}
+            {globalStatData
+              ? globalStatData.TotalDeaths
+              : localStatData
+              ? localStatData.TotalDeaths
+              : null}
           </Text>
           <Text style={styles.globalStatSubHeading}>{'Deaths'}</Text>
         </View>
@@ -57,7 +85,6 @@ const styles = StyleSheet.create({
   },
   globalStatHeading: {
     fontFamily: 'SourceSansPro-Regular',
-    fontSize: 16,
     textAlign: 'left',
     color: '#33ccff',
     fontSize: 18,
