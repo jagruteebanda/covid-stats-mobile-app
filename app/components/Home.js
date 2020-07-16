@@ -1,3 +1,4 @@
+/* eslint-disable no-new */
 import React, {Component} from 'react';
 import {
   View,
@@ -5,6 +6,8 @@ import {
   // AsyncStorage,
   PermissionsAndroid,
   ToastAndroid,
+  BackHandler,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import Geolocation from 'react-native-geolocation-service';
@@ -15,12 +18,16 @@ import FilterSection from './FilterSection';
 import FilterModal from './FilterModal';
 import CountryStats from './CountryStats';
 
+// navigator.geolocation = require('@react-native-community/geolocation');
+
 const {width, height} = Dimensions.get('window');
 
 const http = require('../models/fetch');
 
+let intervalCall;
+
 // STATIC DATA
-const statsData = require('../data/stats');
+// const statsData = require('../data/stats');
 // const locationData = require('../data/location');
 
 export default class Home extends Component {
@@ -32,6 +39,7 @@ export default class Home extends Component {
       globalStatData: {},
       countryStatData: [],
       userLocation: '',
+      userLocationData: {},
       sortData: {
         country: false,
         countrySortType: null,
@@ -44,107 +52,218 @@ export default class Home extends Component {
         filterPopupOpen: false,
       },
       filterData: {
-        column: '',
-        comparator: '',
-        number: '',
+        reset: true,
+        column: 'TotalConfirmed',
+        comparator: '>=',
+        number: '0',
       },
     };
   }
 
   componentDidMount = () => {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackPress);
+
+    // first stat data call
+    this.getCountryStatData();
+
     // GET USER LOCATION
     this.getUserLocation();
 
-    // TODO: API call to get covid stats in interval of 2 minutes
-    let countryStatData = statsData.default.Countries;
-    let globalStatData = statsData.default.Global;
+    // API call to get covid stats in interval of 2 minutes
+    intervalCall = setInterval(
+      function () {
+        setTimeout(
+          function () {
+            this.getCountryStatData();
+          }.bind(this),
+          60000 * 2,
+        );
+      }.bind(this),
+      60000 * 2,
+    );
+  };
+
+  handleBackPress = () => {
+    Alert.alert(
+      'Exit COVID-19 Stats',
+      'Are you sure you want to exit the app?',
+      [
+        {
+          text: 'Cancel',
+          onPress: () => null,
+          style: 'cancel',
+        },
+        {text: 'OK', onPress: () => BackHandler.exitApp()},
+      ],
+    );
+    return true;
+  };
+
+  componentWillUnmount = () => {
+    clearInterval(intervalCall);
+    BackHandler.removeEventListener('hardwareBackPress');
+  };
+
+  setStatData = (statData) => {
+    let {
+      globalStatData,
+      countryStatData,
+      userLocation,
+      userLocationData,
+    } = this.state;
+    countryStatData = statData.Countries;
+    globalStatData = statData.Global;
     // Sort data by Total Confirmed cases in descending order
     countryStatData.sort((a, b) => b.TotalConfirmed - a.TotalConfirmed);
     // Remove zero cases countries
     countryStatData = countryStatData.filter((a) => a.TotalConfirmed !== 0);
+
+    // Filter user location data and push it on to the top
+    if (userLocation) {
+      userLocationData = countryStatData.filter(
+        (a) => a.Country.toLowerCase() === userLocation.toLowerCase(),
+      );
+      AsyncStorage.setItem(
+        'userLocationData',
+        JSON.stringify(userLocationData[0]),
+      );
+    }
+    // console.log(filteredData[0]);
     this.setState({
-      countryStatData,
+      userLocation,
+      userLocationData,
       globalStatData,
+      countryStatData: countryStatData,
       totalStatData: countryStatData,
+    });
+    AsyncStorage.setItem(
+      'statData',
+      JSON.stringify({
+        Global: statData.Global,
+        Countries: countryStatData,
+      }),
+    );
+  };
+
+  getCountryStatData() {
+    const url = 'https://api.covid19api.com/summary';
+    http.get(url, null, async (err, res) => {
+      // console.log(err, res.Global);
+      if (err) {
+        try {
+          let {globalStatData, countryStatData} = this.state;
+          let statData = await AsyncStorage.getItem('statData');
+          statData = JSON.parse(statData);
+          countryStatData = statData.Countries;
+          globalStatData = statData.Global;
+          this.setState({
+            countryStatData,
+            globalStatData,
+            totalStatData: countryStatData,
+          });
+        } catch (error) {
+          ToastAndroid.show(
+            'There was some error fetching data!',
+            ToastAndroid.SHORT,
+          );
+        }
+      }
+      if (res) {
+        ToastAndroid.show('Refreshing your data!', ToastAndroid.SHORT);
+        // console.log(res.Global);
+        this.setStatData(res);
+      }
+    });
+  }
+
+  getUserCountry = (position) => {
+    const url = `http://api.geonames.org/findNearbyPlaceNameJSON?formatted=true&lat=${position.coords.latitude}&lng=${position.coords.longitude}&username=codeelite2345&style=full`;
+    http.get(url, null, (err, res) => {
+      // console.log(err, res);
+      if (err) {
+        ToastAndroid.show(
+          'Could not track you! Please try again later.',
+          ToastAndroid.SHORT,
+        );
+        this.getCountryStatData();
+      }
+      if (res) {
+        // console.log(res);
+        AsyncStorage.setItem('userLocation', res.geonames[0].countryName);
+        // this.state.userLocation = res.geonames[0].countryName;
+        let userLocationData = this.state.countryStatData.filter(
+          (a) =>
+            a.Country.toLowerCase() ===
+            res.geonames[0].countryName.toLowerCase(),
+        );
+        this.setState({
+          userLocation: res.geonames[0].countryName,
+          userLocationData,
+        });
+        this.getCountryStatData();
+      }
     });
   };
 
   getUserLocation = async () => {
+    let positionCoords = await AsyncStorage.getItem('userLocation');
     let userLocation = await AsyncStorage.getItem('userLocation');
-    // console.log(userLocation);
     if (userLocation) {
-      let filteredData = this.state.countryStatData.filter(
-        (a) => a.Country.toLowerCase() !== userLocation.toLowerCase(),
+      this.state.userLocation = userLocation;
+      let userLocationData = JSON.parse(
+        await AsyncStorage.getItem('userLocationData'),
       );
-      // Filter user location data and push it on to the top
-      let userLocationData = this.state.countryStatData.filter(
-        (a) => a.Country.toLowerCase() === userLocation.toLowerCase(),
-      );
-      filteredData.unshift(userLocationData[0]);
-      this.setState({
-        userLocation,
-        countryStatData: filteredData,
-        totalStatData: filteredData,
-      });
+      this.state.userLocationData = userLocationData;
+      this.getCountryStatData();
     } else {
-      try {
-        const granted = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-          {
-            title: 'Access Location Permission',
-            message: 'COVID Stats needs your location information',
-            buttonNeutral: 'Ask Me Later',
-            buttonNegative: 'Cancel',
-            buttonPositive: 'OK',
-          },
-        );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('You can acess the location');
-          Geolocation.getCurrentPosition(
-            (position) => {
-              // console.log(position);
-              // TODO: API call to get user location
-              const url = `http://api.geonames.org/findNearbyPlaceNameJSON?formatted=true&lat=${position.coords.latitude}&lng=${position.coords.longitude}&username=codeelite2345&style=full`;
-              http.get(url, null, (err, res) => {
-                if (err) {
-                  ToastAndroid.show(
-                    'Error getting location',
-                    ToastAndroid.SHORT,
-                  );
-                }
-                if (res) {
-                  // console.log(res);
-                  AsyncStorage.setItem(
-                    'userLocation',
-                    res.geonames[0].countryName,
-                  );
-                  userLocation = res.geonames[0].countryName;
-                  let filteredData = this.state.countryStatData.filter(
-                    (a) => a.Country.toLowerCase() !== userLocation,
-                  );
-                  let userLocationData = this.state.countryStatData.filter(
-                    (a) => a.Country.toLowerCase() === userLocation,
-                  );
-                  filteredData = filteredData.unshift(userLocationData);
-                  this.setState({
-                    userLocation,
-                    countryStatData: filteredData,
-                    totalStatData: countryStatData,
-                  });
-                }
-              });
+      if (positionCoords) {
+        positionCoords = JSON.parse(positionCoords);
+        this.getUserCountry(positionCoords);
+      } else {
+        try {
+          const granted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            {
+              title: 'Access Location Permission',
+              message: 'COVID Stats needs your location information',
+              buttonNeutral: 'Ask Me Later',
+              buttonNegative: 'Cancel',
+              buttonPositive: 'OK',
             },
-            (error) => {
-              // See error code charts below.
-              console.log(error.code, error.message);
-            },
-            {enableHighAccuracy: false, timeout: 15000, maximumAge: 10000},
           );
-        } else {
-          console.log('Location permission denied');
+          if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+            // console.log('You can acess the location');
+            Geolocation.getCurrentPosition(
+              (position) => {
+                // console.log(position);
+                AsyncStorage.setItem('positionCoords', position);
+                // TODO: API call to get user location
+                this.getUserCountry(position);
+              },
+              (error) => {
+                ToastAndroid.show(
+                  'Could not track you! Please try again later.',
+                  ToastAndroid.SHORT,
+                );
+                this.getCountryStatData();
+              },
+              {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+            );
+          } else {
+            ToastAndroid.show(
+              'Location permission denied! We will track your country when you want!',
+              ToastAndroid.SHORT,
+            );
+            this.getCountryStatData();
+          }
+        } catch (err) {
+          // console.warn(err);
+          ToastAndroid.show(
+            'Could not track you! Please try again later.',
+            ToastAndroid.SHORT,
+          );
+          this.getCountryStatData();
         }
-      } catch (err) {
-        console.warn(err);
       }
     }
   };
@@ -153,28 +272,38 @@ export default class Home extends Component {
     this.setState({
       countryStatData: this.state.totalStatData,
       filterData: {
-        column: '',
-        comparator: '',
+        reset: true,
+        column: 'TotalConfirmed',
+        comparator: '>=',
         number: 0,
       },
-      filterPopupOpen: false
+      filterPopupOpen: false,
     });
   }
 
   handleFilterSort(filterData) {
     let {totalStatData, countryStatData} = this.state;
     countryStatData = totalStatData;
-    let userLocationData = countryStatData.slice(0, 1);
-    let filteredData = countryStatData.slice(1, countryStatData.length);
-    filteredData = filteredData.filter((a) => {
+    countryStatData = countryStatData.filter((a) => {
       let b =
-        filterData.comparator === '>='
-          ? a[filterData.column] >= parseInt(filterData.number)
-          : a[filterData.column] <= parseInt(filterData.number);
+        filterData.comparator === '>=' || filterData.comparator === ''
+          ? a[filterData.column] >= parseInt(filterData.number, 10)
+          : a[filterData.column] <= parseInt(filterData.number, 10);
       return b;
     });
-    countryStatData = userLocationData.concat(filteredData);
-    this.setState({filterPopupOpen: false, countryStatData});
+    this.setState({
+      filterPopupOpen: false,
+      countryStatData,
+      filterData: {
+        reset: false,
+        column: filterData.column,
+        comparator:
+          filterData.comparator === '>=' || filterData.comparator === ''
+            ? '>='
+            : '<=',
+        number: parseInt(filterData.number, 10) >= 0 ? filterData.number : '0',
+      },
+    });
   }
 
   handleFilterPopup() {
@@ -191,6 +320,7 @@ export default class Home extends Component {
       filterData: {
         ...filterData,
         column,
+        reset: false,
       },
     });
   }
@@ -201,6 +331,7 @@ export default class Home extends Component {
       filterData: {
         ...filterData,
         comparator,
+        reset: false,
       },
     });
   }
@@ -211,68 +342,67 @@ export default class Home extends Component {
       filterData: {
         ...filterData,
         number,
+        reset: false,
       },
     });
   }
 
   handleCountryStatSorting(sortData) {
-    // console.log(sortData);
     let {countryStatData} = this.state;
-    let userLocationData = countryStatData.slice(0, 1);
-    let remainingData = countryStatData.slice(1, countryStatData.length);
     if (sortData.country) {
       if (sortData.countrySortType === 'asc') {
         // Sort in ascending order
         sortData.countrySortType = 'asc';
-        remainingData.sort((a, b) => a.Country.localeCompare(b.Country));
+        countryStatData.sort((a, b) => a.Country.localeCompare(b.Country));
       } else if (sortData.countrySortType === 'desc') {
         // Sort in descending order
         sortData.countrySortType = 'desc';
-        remainingData.sort((a, b) => b.Country.localeCompare(a.Country));
+        countryStatData.sort((a, b) => b.Country.localeCompare(a.Country));
       } else {
         // Sort by TotalConfirmed cases - original case
         sortData.countrySortType = null;
-        remainingData.sort((a, b) => b.TotalConfirmed - a.TotalConfirmed);
+        countryStatData.sort((a, b) => b.TotalConfirmed - a.TotalConfirmed);
       }
     } else if (sortData.recovered) {
       if (sortData.recoveredSortType === 'asc') {
         // Sort in ascending order
         sortData.recoveredSortType = 'asc';
-        remainingData.sort((a, b) => a.TotalRecovered - b.TotalRecovered);
+        countryStatData.sort((a, b) => a.TotalRecovered - b.TotalRecovered);
       } else {
         // Sort in descending order
         sortData.recoveredSortType = 'desc';
-        remainingData.sort((a, b) => b.TotalRecovered - a.TotalRecovered);
+        countryStatData.sort((a, b) => b.TotalRecovered - a.TotalRecovered);
       }
     } else if (sortData.deaths) {
       if (sortData.deathsSortType === 'asc') {
         // Sort in ascending order
         sortData.deathsSortType = 'asc';
-        remainingData.sort((a, b) => a.TotalDeaths - b.TotalDeaths);
+        countryStatData.sort((a, b) => a.TotalDeaths - b.TotalDeaths);
       } else {
         // Sort in descending order
         sortData.deathsSortType = 'desc';
-        remainingData.sort((a, b) => b.TotalDeaths - a.TotalDeaths);
+        countryStatData.sort((a, b) => b.TotalDeaths - a.TotalDeaths);
       }
     } else {
       // default case: cofirmed based sort
       if (sortData.confirmedSortType === 'asc') {
         // Sort in ascending order
         sortData.confirmedSortType = 'asc';
-        remainingData.sort((a, b) => a.TotalConfirmed - b.TotalConfirmed);
+        countryStatData.sort((a, b) => a.TotalConfirmed - b.TotalConfirmed);
       } else {
         // Sort in descending order
         sortData.confirmedSortType = 'desc';
-        remainingData.sort((a, b) => b.TotalConfirmed - a.TotalConfirmed);
+        countryStatData.sort((a, b) => b.TotalConfirmed - a.TotalConfirmed);
       }
     }
-    countryStatData = userLocationData.concat(remainingData);
     this.setState({sortData, countryStatData});
   }
 
   render() {
     const {
       globalStatData,
+      userLocation,
+      userLocationData,
       countryStatData,
       sortData,
       filterPopupOpen,
@@ -299,16 +429,20 @@ export default class Home extends Component {
             backgroundColor: '#1a1a1a',
           }}>
           <GlobalStats globalStatData={globalStatData} />
+          {userLocationData && Object.keys(userLocationData).length > 0 && (
+            <GlobalStats localStatData={userLocationData[0]} />
+          )}
           <FilterSection
             filterData={filterData}
             resetFilter={() => this.resetFilter()}
             handleFilterPopup={() => this.handleFilterPopup()}
           />
           <CountryStats
+            userLocation={userLocation}
             sortData={sortData}
             countryStatData={countryStatData}
-            handleCountryStatSorting={(sortData) =>
-              this.handleCountryStatSorting(sortData)
+            handleCountryStatSorting={(data) =>
+              this.handleCountryStatSorting(data)
             }
           />
         </View>
@@ -323,7 +457,7 @@ export default class Home extends Component {
             onChangeFilterNumber={(number) => this.onChangeFilterNumber(number)}
             closeFilterPopup={() => this.closeFilterPopup()}
             resetFilter={() => this.resetFilter()}
-            handleFilterSort={(filterData) => this.handleFilterSort(filterData)}
+            handleFilterSort={(data) => this.handleFilterSort(data)}
           />
         )}
       </View>
