@@ -4,7 +4,7 @@ module.exports = {
   rules: {
     "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
     "no-tabs": 0,
-    "indentLogicalExpressions": true,
-    "react-native/no-inline-styles": 2,
+    "indentLogicalExpressions": 0,
+    "react-native/no-inline-styles": 0,
   }
 };
