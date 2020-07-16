@@ -1,12 +1,5 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  Dimensions,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
-// import { TouchableOpacity } from 'react-native-gesture-handler';
+import {View, Text, Dimensions, StyleSheet} from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 
 const {width} = Dimensions.get('window');
@@ -14,25 +7,11 @@ const {width} = Dimensions.get('window');
 const AppBar = (props) => {
   return (
     <View style={styles.appBarView}>
-      {/* <View style={{padding: 18, marginLeft: 8}}>
-        <Text style={{fontSize: 16, opacity: 0}}>{'<'}</Text>
-      </View> */}
       <Icon name={'chart-line'} size={20} color={'#fff'} />
-      <Text
-        style={styles.appName}>
-        {'COVID-19 Stats'}
-      </Text>
-      {/* <TouchableOpacity onPress={() => handleFilterPopup()}>
-        <View style={{padding: 16, marginRight: 8, opacity: 0}}>
-          <Text style={{fontSize: 16}}>{'='}</Text> */}
-      {/* <Icon name={"sliders-h"} size={30} color="#900" /> */}
-      {/* </View>
-      </TouchableOpacity> */}
+      <Text style={styles.appName}>{'COVID-19 Stats'}</Text>
     </View>
   );
 };
-
-
 
 const styles = StyleSheet.create({
   appBarView: {
@@ -41,15 +20,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width,
     height: 50,
-    backgroundColor: '#00cc99',
-    elevation: 2,
+    backgroundColor: '#0d0d0d',
+    elevation: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#33ccff',
   },
   appName: {
     fontFamily: 'SourceSansPro-SemiBold',
     fontSize: 20,
     color: '#ffffff',
-    marginLeft: 8
-  }
+    marginLeft: 8,
+  },
 });
 
 export default AppBar;
