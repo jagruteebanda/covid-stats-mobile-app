@@ -15,10 +15,13 @@ const {width, height} = Dimensions.get('window');
 
 const CountryStats = (props) => {
   const {
+    userLocation,
     countryStatData,
     sortData,
     handleCountryStatSorting = (f) => f,
   } = props;
+
+  const _keyExtractor = (item, index) => `countryStat_${index}`;
 
   return (
     <SafeAreaView style={styles.safeAreaView}>
@@ -136,14 +139,20 @@ const CountryStats = (props) => {
           </View>
         </TouchableOpacity>
       </View>
-      <FlatList
-        style={{flex: 1, width: width - 24, height}}
-        data={countryStatData}
-        renderItem={({item, index}) => (
-          <CountryStatItem item={item} index={index} />
-        )}
-        keyExtractor={(item) => item.Country}
-      />
+      {countryStatData && countryStatData.length > 0 && (
+        <FlatList
+          style={{flex: 1, width: width - 24, height}}
+          data={countryStatData}
+          renderItem={({item, index}) => (
+            <CountryStatItem
+              item={item}
+              index={index}
+              userLocation={userLocation}
+            />
+          )}
+          keyExtractor={_keyExtractor}
+        />
+      )}
     </SafeAreaView>
   );
 };
